@@ -1283,3 +1283,750 @@ pub static PRESENTATION_NON_INHERITABLE_GROUP_ATTRS: LazyLock<HashSet<&'static s
             })
             .unwrap_or_default()
     });
+
+/// CSS properties whose values are colors and should be converted.
+pub static COLORS_PROPS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
+    HashSet::from([
+        "color",
+        "fill",
+        "flood-color",
+        "lighting-color",
+        "stop-color",
+        "stroke",
+    ])
+});
+
+/// Short color name lookup: hex -> shortest name.
+pub static COLORS_SHORT_NAMES: LazyLock<HashMap<&'static str, &'static str>> =
+    LazyLock::new(|| {
+        HashMap::from([
+            ("#f0ffff", "azure"),
+            ("#f5f5dc", "beige"),
+            ("#ffe4c4", "bisque"),
+            ("#a52a2a", "brown"),
+            ("#ff7f50", "coral"),
+            ("#ffd700", "gold"),
+            ("#808080", "gray"),
+            ("#008000", "green"),
+            ("#4b0082", "indigo"),
+            ("#fffff0", "ivory"),
+            ("#f0e68c", "khaki"),
+            ("#faf0e6", "linen"),
+            ("#800000", "maroon"),
+            ("#000080", "navy"),
+            ("#808000", "olive"),
+            ("#ffa500", "orange"),
+            ("#da70d6", "orchid"),
+            ("#cd853f", "peru"),
+            ("#ffc0cb", "pink"),
+            ("#dda0dd", "plum"),
+            ("#800080", "purple"),
+            ("#f00", "red"),
+            ("#ff0000", "red"),
+            ("#fa8072", "salmon"),
+            ("#a0522d", "sienna"),
+            ("#c0c0c0", "silver"),
+            ("#fffafa", "snow"),
+            ("#d2b48c", "tan"),
+            ("#008080", "teal"),
+            ("#ff6347", "tomato"),
+            ("#ee82ee", "violet"),
+            ("#f5deb3", "wheat"),
+        ])
+    });
+
+/// Allowed children per element (ported from elems.*.content + contentGroups).
+#[allow(clippy::type_complexity)]
+pub static ELEMS_CONTENT: LazyLock<HashMap<&'static str, HashSet<&'static str>>> =
+    LazyLock::new(|| {
+        let mut m: HashMap<&str, HashSet<&str>> = HashMap::new();
+
+        macro_rules! add_content {
+            ($name:expr, [$($child:expr),* $(,)?]) => {
+                let entry = m.entry($name).or_default();
+                $(entry.insert($child);)*
+            };
+        }
+
+        // From elems.*.content arrays in _collections.js
+        add_content!(
+            "a",
+            [
+                "a",
+                "altGlyphDef",
+                "clipPath",
+                "color-profile",
+                "cursor",
+                "filter",
+                "font-face",
+                "font",
+                "foreignObject",
+                "image",
+                "marker",
+                "mask",
+                "pattern",
+                "script",
+                "style",
+                "switch",
+                "text",
+                "view",
+                "tspan"
+            ]
+        );
+        add_content!("altGlyphDef", ["glyphRef"]);
+        add_content!("altGlyphItem", ["glyphRef", "altGlyphItem"]);
+        add_content!("animate", ["desc", "metadata", "title"]);
+        add_content!("animateColor", ["desc", "metadata", "title"]);
+        add_content!("animateMotion", ["desc", "metadata", "title", "mpath"]);
+        add_content!("animateTransform", ["desc", "metadata", "title"]);
+        add_content!(
+            "circle",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!(
+            "clipPath",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title",
+                "text",
+                "use"
+            ]
+        );
+        add_content!("color-profile", ["desc", "metadata", "title"]);
+        add_content!("cursor", ["desc", "metadata", "title"]);
+        add_content!(
+            "defs",
+            [
+                "a",
+                "altGlyphDef",
+                "clipPath",
+                "color-profile",
+                "cursor",
+                "filter",
+                "font-face",
+                "font",
+                "foreignObject",
+                "image",
+                "marker",
+                "mask",
+                "pattern",
+                "script",
+                "style",
+                "switch",
+                "text",
+                "view"
+            ]
+        );
+        add_content!("desc", []);
+        add_content!(
+            "ellipse",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!("feBlend", ["animate", "set"]);
+        add_content!("feColorMatrix", ["animate", "set"]);
+        add_content!(
+            "feComponentTransfer",
+            ["feFuncA", "feFuncB", "feFuncG", "feFuncR"]
+        );
+        add_content!("feComposite", ["animate", "set"]);
+        add_content!("feConvolveMatrix", ["animate", "set"]);
+        add_content!(
+            "feDiffuseLighting",
+            [
+                "desc",
+                "metadata",
+                "title",
+                "feDistantLight",
+                "fePointLight",
+                "feSpotLight"
+            ]
+        );
+        add_content!("feDisplacementMap", ["animate", "set"]);
+        add_content!("feDistantLight", ["animate", "set"]);
+        add_content!("feFlood", ["animate", "animateColor", "set"]);
+        add_content!("feFuncA", ["set", "animate"]);
+        add_content!("feFuncB", ["set", "animate"]);
+        add_content!("feFuncG", ["set", "animate"]);
+        add_content!("feFuncR", ["set", "animate"]);
+        add_content!("feGaussianBlur", ["set", "animate"]);
+        add_content!("feImage", ["animate", "animateTransform", "set"]);
+        add_content!("feMerge", ["feMergeNode"]);
+        add_content!("feMergeNode", ["animate", "set"]);
+        add_content!("feMorphology", ["animate", "set"]);
+        add_content!("feOffset", ["animate", "set"]);
+        add_content!("fePointLight", ["animate", "set"]);
+        add_content!(
+            "feSpecularLighting",
+            [
+                "desc",
+                "metadata",
+                "title",
+                "feDistantLight",
+                "fePointLight",
+                "feSpotLight"
+            ]
+        );
+        add_content!("feSpotLight", ["animate", "set"]);
+        add_content!("feTile", ["animate", "set"]);
+        add_content!("feTurbulence", ["animate", "set"]);
+        add_content!(
+            "filter",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title",
+                "feBlend",
+                "feColorMatrix",
+                "feComponentTransfer",
+                "feComposite",
+                "feConvolveMatrix",
+                "feDiffuseLighting",
+                "feDisplacementMap",
+                "feDropShadow",
+                "feFlood",
+                "feFuncA",
+                "feFuncB",
+                "feFuncG",
+                "feFuncR",
+                "feGaussianBlur",
+                "feImage",
+                "feMerge",
+                "feMergeNode",
+                "feMorphology",
+                "feOffset",
+                "feSpecularLighting",
+                "feTile",
+                "feTurbulence"
+            ]
+        );
+        add_content!(
+            "font",
+            [
+                "desc",
+                "metadata",
+                "title",
+                "font-face",
+                "glyph",
+                "hkern",
+                "missing-glyph",
+                "vkern"
+            ]
+        );
+        add_content!("font-face", ["desc", "metadata", "title", "font-face-src"]);
+        add_content!("font-face-src", ["font-face-name", "font-face-uri"]);
+        add_content!("font-face-uri", ["font-face-format"]);
+        add_content!("foreignObject", ["desc", "metadata", "title"]); // accepts any content but we list descriptive
+        add_content!(
+            "g",
+            [
+                "a",
+                "altGlyphDef",
+                "clipPath",
+                "color-profile",
+                "cursor",
+                "filter",
+                "font-face",
+                "font",
+                "foreignObject",
+                "image",
+                "marker",
+                "mask",
+                "pattern",
+                "script",
+                "style",
+                "switch",
+                "text",
+                "view"
+            ]
+        );
+        add_content!(
+            "glyph",
+            [
+                "a",
+                "altGlyphDef",
+                "clipPath",
+                "color-profile",
+                "cursor",
+                "filter",
+                "font-face",
+                "font",
+                "foreignObject",
+                "image",
+                "marker",
+                "mask",
+                "pattern",
+                "script",
+                "style",
+                "switch",
+                "text",
+                "view"
+            ]
+        );
+        add_content!(
+            "glyphRef",
+            [
+                "a",
+                "altGlyphDef",
+                "clipPath",
+                "color-profile",
+                "cursor",
+                "filter",
+                "font-face",
+                "font",
+                "foreignObject",
+                "image",
+                "marker",
+                "mask",
+                "pattern",
+                "script",
+                "style",
+                "switch",
+                "text",
+                "view"
+            ]
+        );
+        add_content!(
+            "hatch",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title",
+                "hatchPath"
+            ]
+        );
+        add_content!(
+            "hatchPath",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!(
+            "image",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!(
+            "line",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!(
+            "linearGradient",
+            [
+                "animate",
+                "animateTransform",
+                "set",
+                "stop",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!(
+            "marker",
+            [
+                "a",
+                "altGlyphDef",
+                "clipPath",
+                "color-profile",
+                "cursor",
+                "filter",
+                "font-face",
+                "font",
+                "foreignObject",
+                "image",
+                "marker",
+                "mask",
+                "pattern",
+                "script",
+                "style",
+                "switch",
+                "text",
+                "view"
+            ]
+        );
+        add_content!(
+            "mask",
+            [
+                "a",
+                "altGlyphDef",
+                "clipPath",
+                "color-profile",
+                "cursor",
+                "filter",
+                "font-face",
+                "font",
+                "foreignObject",
+                "image",
+                "marker",
+                "mask",
+                "pattern",
+                "script",
+                "style",
+                "switch",
+                "text",
+                "view"
+            ]
+        );
+        add_content!(
+            "meshGradient",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title",
+                "meshRow",
+                "linearGradient",
+                "radialGradient",
+                "pattern",
+                "image",
+                "svg",
+                "text",
+                "use",
+                "rect",
+                "circle",
+                "ellipse",
+                "line",
+                "path",
+                "polygon",
+                "polyline"
+            ]
+        );
+        add_content!("meshRow", ["desc", "metadata", "title", "meshPatch"]);
+        add_content!("meshPatch", ["desc", "metadata", "title", "stop"]);
+        add_content!(
+            "missing-glyph",
+            [
+                "a",
+                "altGlyphDef",
+                "clipPath",
+                "color-profile",
+                "cursor",
+                "filter",
+                "font-face",
+                "font",
+                "foreignObject",
+                "image",
+                "marker",
+                "mask",
+                "pattern",
+                "script",
+                "style",
+                "switch",
+                "text",
+                "view"
+            ]
+        );
+        add_content!("mpath", ["desc", "metadata", "title"]);
+        add_content!(
+            "path",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!(
+            "pattern",
+            [
+                "a",
+                "altGlyphDef",
+                "clipPath",
+                "color-profile",
+                "cursor",
+                "filter",
+                "font-face",
+                "font",
+                "foreignObject",
+                "image",
+                "marker",
+                "mask",
+                "pattern",
+                "script",
+                "style",
+                "switch",
+                "text",
+                "view"
+            ]
+        );
+        add_content!(
+            "polygon",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!(
+            "polyline",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!(
+            "radialGradient",
+            [
+                "animate",
+                "animateTransform",
+                "set",
+                "stop",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!(
+            "rect",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!("script", []);
+        add_content!("set", ["desc", "metadata", "title"]);
+        add_content!(
+            "solidColor",
+            [
+                "linearGradient",
+                "radialGradient",
+                "pattern",
+                "hatch",
+                "solidColor"
+            ]
+        );
+        add_content!("stop", ["animate", "animateColor", "set"]);
+        add_content!(
+            "svg",
+            [
+                "a",
+                "altGlyphDef",
+                "clipPath",
+                "color-profile",
+                "cursor",
+                "filter",
+                "font-face",
+                "font",
+                "foreignObject",
+                "image",
+                "marker",
+                "mask",
+                "pattern",
+                "script",
+                "style",
+                "switch",
+                "text",
+                "view"
+            ]
+        );
+        add_content!(
+            "switch",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title",
+                "a",
+                "foreignObject",
+                "g",
+                "image",
+                "svg",
+                "switch",
+                "text",
+                "use",
+                "circle",
+                "ellipse",
+                "line",
+                "path",
+                "polygon",
+                "polyline",
+                "rect"
+            ]
+        );
+        add_content!(
+            "symbol",
+            [
+                "a",
+                "altGlyphDef",
+                "clipPath",
+                "color-profile",
+                "cursor",
+                "filter",
+                "font-face",
+                "font",
+                "foreignObject",
+                "image",
+                "marker",
+                "mask",
+                "pattern",
+                "script",
+                "style",
+                "switch",
+                "text",
+                "view"
+            ]
+        );
+        add_content!(
+            "text",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title",
+                "a",
+                "altGlyph",
+                "textPath",
+                "tref",
+                "tspan"
+            ]
+        );
+        add_content!(
+            "textPath",
+            [
+                "a",
+                "altGlyph",
+                "animate",
+                "animateColor",
+                "set",
+                "tref",
+                "tspan",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!("title", []);
+        add_content!(
+            "tref",
+            [
+                "animate",
+                "animateColor",
+                "set",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!(
+            "tspan",
+            [
+                "a",
+                "altGlyph",
+                "animate",
+                "animateColor",
+                "set",
+                "tref",
+                "tspan",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!(
+            "use",
+            [
+                "animate",
+                "animateColor",
+                "animateMotion",
+                "animateTransform",
+                "set",
+                "desc",
+                "metadata",
+                "title"
+            ]
+        );
+        add_content!("view", ["desc", "metadata", "title"]);
+
+        m
+    });
