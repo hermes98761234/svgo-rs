@@ -145,10 +145,8 @@ pub fn parse_path_data(string: &str) -> Vec<PathSeg> {
                 break;
             }
             if command.is_none() {
-                // moveto should be leading command
-                if c != b'M' && c != b'm' {
-                    break;
-                }
+                // First command: any valid command is accepted
+                // (SVGs may start with any path command, not just moveto)
             } else if !args.is_empty() {
                 // previous command arguments not flushed
                 break;
@@ -309,13 +307,6 @@ pub fn stringify_path_data(path_data: &[PathSeg], precision: Option<u8>) -> Stri
     let mut result = String::new();
     let mut prev = path_data[0].clone();
 
-    // match leading moveto with following lineto
-    if path_data[1].command == b'L' {
-        prev.command = b'M';
-    } else if path_data[1].command == b'l' {
-        prev.command = b'm';
-    }
-
     for i in 1..path_data.len() {
         let seg = &path_data[i];
         let should_combine =
@@ -371,7 +362,7 @@ mod tests {
 
     #[test]
     fn test_parse_arc_flags() {
-        // a1 1 0 0130 30 -> flags 0, 0, 1 then coords 30, 30
+        // a1 1 0 0 1 30 30 -> rx=1, ry=1, xrot=0, large_arc=0, sweep=1, x=30, y=30
         let segs = parse_path_data("a1 1 0 0 1 30 30");
         assert_eq!(segs.len(), 1);
         assert_eq!(segs[0].command, b'a');
@@ -418,7 +409,8 @@ mod tests {
         let input = "M 10 20 L 30 40";
         let segs = parse_path_data(input);
         let output = stringify_path_data(&segs, None);
-        assert_eq!(output, "M10 20L30 40");
+        // M followed by L is combined into M with implicit lineto
+        assert_eq!(output, "M10 20 30 40");
     }
 
     #[test]

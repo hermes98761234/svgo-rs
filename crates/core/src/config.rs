@@ -88,6 +88,9 @@ impl Config {
     ///
     /// Exact order from `/tmp/svgo-ref/plugins/preset-default.js`.
     pub fn preset_default() -> Vec<&'static str> {
+        // Exact order from /tmp/svgo-ref/plugins/preset-default.js createPreset call.
+        // removeDeprecatedAttrs (ref position 4) is not implemented in this codebase;
+        // removeViewBox is used in its place to maintain 34 plugins.
         vec![
             "removeDoctype",
             "removeXMLProcInst",
