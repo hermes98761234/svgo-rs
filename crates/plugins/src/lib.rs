@@ -28,6 +28,30 @@ pub mod remove_useless_stroke_and_fill;
 pub mod sort_attrs;
 pub mod sort_defs_children;
 
+// Batch C plugins
+pub mod convert_ellipse_to_circle;
+pub mod convert_path_data;
+pub mod convert_shape_to_path;
+pub mod convert_transform;
+pub mod merge_paths;
+pub mod path;
+pub mod transforms;
+
+// Batch D plugins
+pub mod collapse_groups;
+pub mod inline_styles;
+pub mod merge_styles;
+pub mod minify_styles;
+pub mod move_elems_attrs_to_group;
+pub mod move_group_attrs_to_elems;
+
+use collapse_groups::CollapseGroups;
+use inline_styles::InlineStyles;
+use merge_styles::MergeStyles;
+use minify_styles::MinifyStyles;
+use move_elems_attrs_to_group::MoveElemsAttrsToGroup;
+use move_group_attrs_to_elems::MoveGroupAttrsToElems;
+
 use svgo_core::plugin::Registry;
 
 /// Register all batch A plugins into the given registry.
@@ -142,4 +166,55 @@ pub fn register_all(r: &mut Registry) {
         std::sync::Arc::new(|_| Box::new(SortDefsChildren)),
     );
     r.register("cleanupIds", std::sync::Arc::new(|_| Box::new(CleanupIds)));
+
+    // Batch C plugins
+    use convert_ellipse_to_circle::ConvertEllipseToCircle;
+    use convert_path_data::ConvertPathData;
+    use convert_shape_to_path::ConvertShapeToPath;
+    use convert_transform::ConvertTransform;
+    use merge_paths::MergePaths;
+
+    r.register(
+        "convertEllipseToCircle",
+        std::sync::Arc::new(|_| Box::new(ConvertEllipseToCircle)),
+    );
+    r.register(
+        "convertPathData",
+        std::sync::Arc::new(|_| Box::new(ConvertPathData)),
+    );
+    r.register(
+        "convertShapeToPath",
+        std::sync::Arc::new(|_| Box::new(ConvertShapeToPath)),
+    );
+    r.register(
+        "convertTransform",
+        std::sync::Arc::new(|_| Box::new(ConvertTransform)),
+    );
+    r.register("mergePaths", std::sync::Arc::new(|_| Box::new(MergePaths)));
+
+    // Batch D plugins
+    r.register(
+        "mergeStyles",
+        std::sync::Arc::new(|_| Box::new(MergeStyles)),
+    );
+    r.register(
+        "minifyStyles",
+        std::sync::Arc::new(|_| Box::new(MinifyStyles)),
+    );
+    r.register(
+        "inlineStyles",
+        std::sync::Arc::new(|_| Box::new(InlineStyles)),
+    );
+    r.register(
+        "moveElemsAttrsToGroup",
+        std::sync::Arc::new(|_| Box::new(MoveElemsAttrsToGroup)),
+    );
+    r.register(
+        "moveGroupAttrsToElems",
+        std::sync::Arc::new(|_| Box::new(MoveGroupAttrsToElems)),
+    );
+    r.register(
+        "collapseGroups",
+        std::sync::Arc::new(|_| Box::new(CollapseGroups)),
+    );
 }

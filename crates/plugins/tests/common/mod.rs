@@ -58,8 +58,12 @@ pub fn run_fixture(plugin: &dyn svgo_core::plugin::Plugin, fixture: &str) {
     let expected_normalized = normalize_xml(expected);
 
     assert_eq!(
-        output_normalized, expected_normalized,
+        output_normalized,
+        expected_normalized,
         "\nPlugin: {}\nInput: {}\nExpected:\n{}\nGot:\n{}",
-        plugin.name(), input, expected_normalized, output_normalized
+        plugin.name(),
+        input,
+        expected_normalized,
+        output_normalized
     );
 }

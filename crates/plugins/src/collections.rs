@@ -1285,6 +1285,11 @@ pub static PRESENTATION_NON_INHERITABLE_GROUP_ATTRS: LazyLock<HashSet<&'static s
     });
 
 /// CSS properties whose values are colors and should be converted.
+/// Elements that can have a `d` attribute (path data).
+#[allow(non_upper_case_globals)]
+pub static pathElems: LazyLock<HashSet<&'static str>> =
+    LazyLock::new(|| HashSet::from(["glyph", "missing-glyph", "path"]));
+
 pub static COLORS_PROPS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
     HashSet::from([
         "color",
