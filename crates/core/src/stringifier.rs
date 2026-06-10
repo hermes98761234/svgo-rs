@@ -114,21 +114,27 @@ fn stringify_element(el: &Element, out: &mut String, opts: &StringifyOptions, de
         out.push('"');
     }
 
-    // Self-close only if it was originally self-closing AND has no children
     if el.self_closing && el.children.is_empty() {
         out.push_str("/>");
     } else {
         out.push('>');
         let has_only_text = el.children.len() == 1 && matches!(el.children[0], Node::Text(_));
-        if opts.pretty && !has_only_text {
-            out.push_str(&opts.eol);
-        }
-        for child in &el.children {
-            stringify_node(child, out, opts, depth + 1);
-        }
-        if opts.pretty && !has_only_text {
-            for _ in 0..depth {
-                out.push_str(&opts.indent);
+        if has_only_text {
+            // Output text content inline (no indentation/newline)
+            if let Node::Text(text) = &el.children[0] {
+                out.push_str(&escape_text(text));
+            }
+        } else {
+            if opts.pretty {
+                out.push_str(&opts.eol);
+            }
+            for child in &el.children {
+                stringify_node(child, out, opts, depth + 1);
+            }
+            if opts.pretty {
+                for _ in 0..depth {
+                    out.push_str(&opts.indent);
+                }
             }
         }
         out.push_str("</");

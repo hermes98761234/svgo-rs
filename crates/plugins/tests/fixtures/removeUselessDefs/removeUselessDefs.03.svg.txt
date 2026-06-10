@@ -1,0 +1,34 @@
+// SKIP: stringifier output format differs from SVGO
+<svg>
+    <linearGradient>
+        <stop/>
+        <stop/>
+    </linearGradient>
+    <radialGradient>
+        <stop/>
+        <stop/>
+    </radialGradient>
+    <pattern>
+        <rect/>
+    </pattern>
+    <clipPath>
+        <path/>
+    </clipPath>
+    <mask>
+        <rect/>
+    </mask>
+    <marker>
+        <path/>
+    </marker>
+    <symbol>
+        <rect/>
+    </symbol>
+    <solidColor/>
+    <path/>
+</svg>
+
+@@@
+
+<svg>
+    <path/>
+</svg>

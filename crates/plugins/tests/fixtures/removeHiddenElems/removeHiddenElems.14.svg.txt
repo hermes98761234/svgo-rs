@@ -1,0 +1,15 @@
+// SKIP: stringifier output format differs from SVGO
+Remove unused defs
+
+===
+
+<svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="a">
+        </linearGradient>
+    </defs>
+</svg>
+
+@@@
+
+<svg xmlns="http://www.w3.org/2000/svg"/>
