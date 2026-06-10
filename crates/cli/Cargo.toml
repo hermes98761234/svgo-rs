@@ -1,0 +1,22 @@
+[package]
+name = "svgo-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "svgo"
+path = "src/main.rs"
+
+[dependencies]
+svgo-core = { path = "../core" }
+svgo-plugins = { path = "../plugins" }
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+regex = "1"
+serde_json = "1"
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+tempfile = "3"
