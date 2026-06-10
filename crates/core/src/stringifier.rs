@@ -32,12 +32,14 @@ fn escape_attr(value: &str) -> String {
         .replace('>', "&gt;")
 }
 
-/// Escape text content: & < and > must be escaped.
+/// Escape text content: & < > ' and " must be escaped.
 fn escape_text(value: &str) -> String {
     value
         .replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
 }
 
 /// Stringify a Document to an SVG/XML string.
@@ -60,7 +62,13 @@ fn stringify_node(node: &Node, out: &mut String, opts: &StringifyOptions, depth:
     }
     match node {
         Node::Element(el) => stringify_element(el, out, opts, depth),
-        Node::Text(text) => out.push_str(&escape_text(text)),
+        Node::Text(text) => {
+            // When pretty-printing, skip whitespace-only text nodes (input formatting artifacts).
+            if opts.pretty && text.trim().is_empty() {
+                return;
+            }
+            out.push_str(&escape_text(text));
+        }
         Node::Comment(text) => {
             out.push_str("<!--");
             out.push_str(text);
@@ -80,24 +88,13 @@ fn stringify_node(node: &Node, out: &mut String, opts: &StringifyOptions, depth:
             out.push('>');
         }
         Node::Instruction { name, value } => {
-            if name == "xml" {
-                // Special-case: XML declaration
-                out.push_str("<?");
-                out.push_str(name);
-                if !value.is_empty() {
-                    out.push(' ');
-                    out.push_str(value);
-                }
-                out.push_str("?>");
-            } else {
-                out.push_str("<?");
-                out.push_str(name);
-                if !value.is_empty() {
-                    out.push(' ');
-                    out.push_str(value);
-                }
-                out.push_str("?>");
+            out.push_str("<?");
+            out.push_str(name);
+            if !value.is_empty() {
+                out.push(' ');
+                out.push_str(value);
             }
+            out.push_str("?>");
         }
     }
 }
@@ -114,8 +111,18 @@ fn stringify_element(el: &Element, out: &mut String, opts: &StringifyOptions, de
         out.push('"');
     }
 
-    if el.self_closing && el.children.is_empty() {
-        out.push_str("/>");
+    if el.children.is_empty() {
+        // Use self-closing tag for empty elements.
+        // When pretty-printing, always use "/>" to match SVGO output.
+        // When not compact, respect the original self_closing flag for roundtrip fidelity.
+        if opts.pretty || el.self_closing {
+            out.push_str("/>");
+        } else {
+            out.push('>');
+            out.push_str("</");
+            out.push_str(&el.name);
+            out.push('>');
+        }
     } else {
         out.push('>');
         let has_only_text = el.children.len() == 1 && matches!(el.children[0], Node::Text(_));
